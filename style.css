@@ -1,0 +1,57 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: white;
+    overflow: hidden;
+}
+
+.container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+}
+
+canvas {
+    display: block;
+}
+
+.panel {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 300px;
+    background: #1f1f1f;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.7);
+}
+
+.panel input,
+.panel button {
+    width: 100%;
+    margin-top: 8px;
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+}
+
+.panel button {
+    background: #00b894;
+    color: white;
+    cursor: pointer;
+}
+
+.panel button:hover {
+    background: #00a383;
+}
+
+#result {
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+#score {
+    margin-top: 10px;
+    color: #00ffcc;
+}
