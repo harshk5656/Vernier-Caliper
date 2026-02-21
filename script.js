@@ -1,96 +1,176 @@
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
+const readingText = document.getElementById("reading");
+const clickSound = document.getElementById("clickSound");
 
 canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+canvas.height = 500;
 
-const scalePx = 10;
-const leastCount = 0.02;
-
-let trueMeasurement = 0;
 let slider = 0;
 let dragging = false;
 let startX = 0;
-let score = 0;
 
-const generateBtn = document.getElementById("generateBtn");
-const submitBtn = document.getElementById("submitBtn");
-const revealBtn = document.getElementById("revealBtn");
-const zeroInput = document.getElementById("zeroError");
-const studentInput = document.getElementById("studentReading");
-const resultText = document.getElementById("result");
-const scoreText = document.getElementById("score");
+const baseY = 260;
+const scalePx = 120; // 1 cm
+const leastCount = 0.02;
 
-function generateObject() {
-    trueMeasurement = Math.random() * 80 + 5;
-    trueMeasurement = Math.round(trueMeasurement / leastCount) * leastCount;
-    slider = trueMeasurement * scalePx;
-    resultText.innerText = "";
-    draw();
+function brushedMetal(x,y,w,h){
+    let grad = ctx.createLinearGradient(x,y,x,y+h);
+    grad.addColorStop(0,"#f2f2f2");
+    grad.addColorStop(0.3,"#d0d0d0");
+    grad.addColorStop(0.5,"#ffffff");
+    grad.addColorStop(0.7,"#c0c0c0");
+    grad.addColorStop(1,"#e8e8e8");
+    return grad;
 }
 
-function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    let baseY = canvas.height / 2;
+function drawBody(){
+    ctx.shadowColor="rgba(0,0,0,0.5)";
+    ctx.shadowBlur=20;
+    ctx.fillStyle=brushedMetal(120,baseY-30,900,60);
+    ctx.fillRect(120,baseY-30,900,60);
+    ctx.shadowBlur=0;
+}
 
-    // Main scale body
-    ctx.fillStyle = "#ddd";
-    ctx.fillRect(100, baseY - 20, 1000, 40);
+function drawMainScale(){
+    ctx.strokeStyle="#111";
+    ctx.lineWidth=1;
+    ctx.font="16px Arial";
+    ctx.fillStyle="black";
 
-    ctx.strokeStyle = "black";
-    ctx.font = "12px Arial";
+    for(let i=0;i<=5;i++){
+        let x=120+i*scalePx;
 
-    for (let i = 0; i <= 100; i++) {
-        let x = 100 + i * scalePx;
         ctx.beginPath();
-        ctx.moveTo(x, baseY - 20);
-        ctx.lineTo(x, i % 10 === 0 ? baseY - 50 : baseY - 35);
+        ctx.moveTo(x,baseY-30);
+        ctx.lineTo(x,baseY-70);
         ctx.stroke();
 
-        if (i % 10 === 0) {
-            ctx.fillText(i, x - 5, baseY - 60);
+        ctx.fillText(i,x-5,baseY-80);
+
+        for(let j=1;j<10;j++){
+            let smallX=x+j*(scalePx/10);
+            ctx.beginPath();
+            ctx.moveTo(smallX,baseY-30);
+            ctx.lineTo(smallX,baseY-45);
+            ctx.stroke();
         }
     }
 
-    // Object
-    ctx.fillStyle = "#4da6ff";
-    ctx.fillRect(100, baseY - 60, trueMeasurement * scalePx, 40);
-
-    // Sliding Vernier
-    ctx.fillStyle = "#ccc";
-    ctx.fillRect(100 + slider, baseY - 80, 200, 100);
+    ctx.fillText("1 MSD = 0.1 cm",850,baseY-95);
 }
 
-function checkAnswer() {
-    let zeroError = parseFloat(zeroInput.value) || 0;
-    let student = parseFloat(studentInput.value) || 0;
+function drawFixedJaw(){
+    ctx.fillStyle=brushedMetal(70,baseY-180,70,160);
+    ctx.fillRect(80,baseY-180,60,160);
+}
 
-    let correct = trueMeasurement + zeroError;
-    correct = Math.round(correct / leastCount) * leastCount;
+function drawSlider(){
+    let slideX=120+slider;
 
-    if (Math.abs(student - correct) <= leastCount) {
-        score++;
-        resultText.innerText = "✅ Correct!";
-        resultText.style.color = "lightgreen";
-    } else {
-        resultText.innerText = "❌ Incorrect!";
-        resultText.style.color = "red";
+    ctx.fillStyle=brushedMetal(slideX,baseY-100,230,130);
+    ctx.fillRect(slideX,baseY-100,230,130);
+
+    // sliding jaw
+    ctx.fillStyle=brushedMetal(slideX+210,baseY-180,60,160);
+    ctx.fillRect(slideX+210,baseY-180,60,160);
+
+    // Vernier scale
+    ctx.strokeStyle="#000";
+    let remainder=(slider/scalePx)%1;
+    let coinciding=Math.round(remainder/leastCount);
+
+    for(let i=0;i<=50;i++){
+        let vx=slideX+i*(scalePx/50);
+
+        ctx.beginPath();
+        ctx.moveTo(vx,baseY-100);
+        ctx.lineTo(vx,baseY-115);
+        ctx.stroke();
+
+        if(i===coinciding){
+            ctx.strokeStyle="red";
+            ctx.beginPath();
+            ctx.moveTo(vx,baseY-100);
+            ctx.lineTo(vx,baseY-130);
+            ctx.stroke();
+            ctx.strokeStyle="#000";
+        }
     }
 
-    scoreText.innerText = "Score: " + score;
+    // thumb roller
+    ctx.fillStyle="#888";
+    ctx.beginPath();
+    ctx.arc(slideX+115,baseY+10,25,0,Math.PI*2);
+    ctx.fill();
+
+    // roller ridges
+    ctx.strokeStyle="#555";
+    for(let i=0;i<10;i++){
+        ctx.beginPath();
+        ctx.moveTo(slideX+95+i*4,baseY-10);
+        ctx.lineTo(slideX+95+i*4,baseY+30);
+        ctx.stroke();
+    }
+
+    // lock screw
+    ctx.fillStyle="#666";
+    ctx.beginPath();
+    ctx.arc(slideX+180,baseY-110,8,0,Math.PI*2);
+    ctx.fill();
 }
 
-function revealAnswer() {
-    let zeroError = parseFloat(zeroInput.value) || 0;
-    let correct = trueMeasurement + zeroError;
-    correct = Math.round(correct / leastCount) * leastCount;
-
-    resultText.innerText = "Correct Reading: " + correct.toFixed(2) + " mm";
-    resultText.style.color = "yellow";
+function drawDepthRod(){
+    let rodX=120+slider+900;
+    ctx.fillStyle="#999";
+    ctx.fillRect(rodX,baseY-5,4,50);
 }
 
-generateBtn.addEventListener("click", generateObject);
-submitBtn.addEventListener("click", checkAnswer);
-revealBtn.addEventListener("click", revealAnswer);
+function calculateReading(){
+    let mainScale=Math.floor(slider/scalePx);
+    let remainder=(slider/scalePx)-mainScale;
+    let vernier=Math.round(remainder/leastCount);
+    let reading=(mainScale+vernier*leastCount)*10; // convert to mm
+    readingText.innerText=reading.toFixed(2)+" mm";
+}
 
-generateObject();
+function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    drawBody();
+    drawMainScale();
+    drawFixedJaw();
+    drawSlider();
+    drawDepthRod();
+    calculateReading();
+}
+
+function startDrag(x){
+    dragging=true;
+    startX=x;
+}
+
+function moveDrag(x){
+    if(dragging){
+        let dx=x-startX;
+        slider+=dx;
+        if(slider<0)slider=0;
+        if(slider>600)slider=600;
+        startX=x;
+        clickSound.currentTime=0;
+        clickSound.play();
+        draw();
+    }
+}
+
+canvas.addEventListener("mousedown",e=>startDrag(e.offsetX));
+canvas.addEventListener("mousemove",e=>moveDrag(e.offsetX));
+canvas.addEventListener("mouseup",()=>dragging=false);
+
+canvas.addEventListener("touchstart",e=>startDrag(e.touches[0].clientX));
+canvas.addEventListener("touchmove",e=>{
+    moveDrag(e.touches[0].clientX);
+});
+canvas.addEventListener("touchend",()=>dragging=false);
+
+draw();
