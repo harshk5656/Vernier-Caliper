@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Physics Lab – Vernier Caliper</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <canvas id="canvas"></canvas>
+
+    <div class="panel">
+        <h2>Practical Exam Mode</h2>
+
+        <button id="generateBtn">Generate Object</button>
+
+        <label>Zero Error (mm)</label>
+        <input type="number" id="zeroError" step="0.01" value="0">
+
+        <label>Your Reading (mm)</label>
+        <input type="number" id="studentReading" step="0.01">
+
+        <button id="submitBtn">Submit</button>
+        <button id="revealBtn">Reveal Answer</button>
+
+        <div id="result"></div>
+        <div id="score">Score: 0</div>
+    </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
